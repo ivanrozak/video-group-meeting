@@ -13,9 +13,11 @@ const Room = (props) => {
     localUser: { video: true, audio: true },
   });
   const [videoDevices, setVideoDevices] = useState([]);
+  const [audioDevices, setAudioDevices] = useState([]);
   const [displayChat, setDisplayChat] = useState(false);
   const [screenShare, setScreenShare] = useState(false);
   const [showVideoDevices, setShowVideoDevices] = useState(false);
+  const [showAudioDevices, setShowAudioDevices] = useState(false);
   const peersRef = useRef([]);
   const userVideoRef = useRef();
   const screenTrackRef = useRef();
@@ -23,9 +25,11 @@ const Room = (props) => {
   const roomId = props.match.params.roomId;
 
   useEffect(() => {
-    // Get Video Devices
+    // Get Video and Audio Devices
     navigator.mediaDevices.enumerateDevices().then((devices) => {
       const filtered = devices.filter((device) => device.kind === 'videoinput');
+      const audioInput = devices.filter((device) => device.kind === 'audioinput');
+      setAudioDevices(audioInput);
       setVideoDevices(filtered);
     });
 
@@ -341,6 +345,35 @@ const Room = (props) => {
     }
   };
 
+  const clickMicDevice = (event) => {
+    if (event && event.target && event.target.dataset && event.target.dataset.value) {
+      const deviceId = event.target.dataset.value;
+      const enabledVideo = userVideoRef.current.srcObject.getVideoTracks()[0].enabled;
+
+      navigator.mediaDevices
+        .getUserMedia({ video: enabledVideo, audio: { deviceId } })
+        .then((stream) => {
+          console.log(stream.getTracks())
+          const newStreamTrack = stream.getTracks().find((track) => track.kind === 'audio');
+          const oldStreamTrack = userStream.current
+            .getTracks()
+            .find((track) => track.kind === 'audio');
+
+          userStream.current.removeTrack(oldStreamTrack);
+          userStream.current.addTrack(newStreamTrack);
+
+          peersRef.current.forEach(({ peer }) => {
+            // replaceTrack (oldTrack, newTrack, oldStream);
+            peer.replaceTrack(
+              oldStreamTrack,
+              newStreamTrack,
+              userStream.current
+            );
+          });
+        });
+    }
+  };
+
   return (
     <RoomContainer onClick={clickBackground}>
       <VideoAndBarContainer>
@@ -369,6 +402,7 @@ const Room = (props) => {
           clickScreenSharing={clickScreenSharing}
           clickChat={clickChat}
           clickCameraDevice={clickCameraDevice}
+          clickMicDevice={clickMicDevice}
           goToBack={goToBack}
           toggleCameraAudio={toggleCameraAudio}
           userVideoAudio={userVideoAudio['localUser']}
@@ -376,6 +410,10 @@ const Room = (props) => {
           videoDevices={videoDevices}
           showVideoDevices={showVideoDevices}
           setShowVideoDevices={setShowVideoDevices}
+          audioDevices={audioDevices}
+          showAudioDevices={showAudioDevices}
+          setShowAudioDevices={setShowAudioDevices}
+
         />
       </VideoAndBarContainer>
       <Chat display={displayChat} roomId={roomId} />
@@ -407,6 +445,9 @@ const VideoAndBarContainer = styled.div`
   position: relative;
   width: 100%;
   height: 100vh;
+  @media (max-width: 1300px) {
+    height: 85vh;
+  }
 `;
 
 const MyVideo = styled.video``;

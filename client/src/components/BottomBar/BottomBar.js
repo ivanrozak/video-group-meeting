@@ -4,6 +4,7 @@ import styled from 'styled-components';
 const BottomBar = ({
   clickChat,
   clickCameraDevice,
+  clickMicDevice,
   goToBack,
   toggleCameraAudio,
   userVideoAudio,
@@ -11,7 +12,10 @@ const BottomBar = ({
   screenShare,
   videoDevices,
   showVideoDevices,
-  setShowVideoDevices
+  setShowVideoDevices,
+  audioDevices,
+  showAudioDevices,
+  setShowAudioDevices,
 }) => {
   const handleToggle = useCallback(
     (e) => {
@@ -19,6 +23,13 @@ const BottomBar = ({
     },
     [setShowVideoDevices]
   );
+
+  const handleToggleAudio = useCallback(
+    (e) => {
+      setShowAudioDevices((state) => !state);
+    },
+    [setShowAudioDevices]
+  )
 
   return (
     <Bar>
@@ -55,6 +66,18 @@ const BottomBar = ({
           </div>
           Audio
         </CameraButton>
+        {showAudioDevices && (
+          <SwitchListAudio>
+            {audioDevices.length > 0 &&
+              audioDevices.map((device) => {
+                return <div key={device.deviceId} onClick={clickMicDevice} data-value={device.deviceId} >{device.label}</div>;
+              })}
+            <div>Switch Audio Source</div>
+          </SwitchListAudio>
+        )}
+        <SwitchMenuAudio onClick={handleToggleAudio}>
+          <i className='fas fa-angle-up'></i>
+        </SwitchMenuAudio>
       </Left>
       <Center>
         <ChatButton onClick={clickChat}>
@@ -211,12 +234,67 @@ const SwitchMenu = styled.div`
   }
 `;
 
+const SwitchMenuAudio = styled.div`
+  display: flex;
+  position: absolute;
+  width: 20px;
+  top: 7px;
+  left: 160px;
+  z-index: 1;
+
+  :hover {
+    background-color: #476d84;
+    cursor: pointer;
+    border-radius: 15px;
+  }
+
+  * {
+    pointer-events: none;
+  }
+
+  > i {
+    width: 90%;
+    font-size: calc(10px + 1vmin);
+  }
+`;
+
 const SwitchList = styled.div`
   display: flex;
   flex-direction: column;
   position: absolute;
   top: -65.95px;
   left: 80px;
+  background-color: #4ea1d3;
+  color: white;
+  padding-top: 5px;
+  padding-right: 10px;
+  padding-bottom: 5px;
+  padding-left: 10px;
+  text-align: left;
+
+  > div {
+    font-size: 0.85rem;
+    padding: 1px;
+    margin-bottom: 5px;
+
+    :not(:last-child):hover {
+      background-color: #77b7dd;
+      cursor: pointer;
+    }
+  }
+
+  > div:last-child {
+    border-top: 1px solid white;
+    cursor: context-menu !important;
+  }
+`;
+
+const SwitchListAudio = styled.div`
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: -65.95px;
+  left: 160px;
   background-color: #4ea1d3;
   color: white;
   padding-top: 5px;

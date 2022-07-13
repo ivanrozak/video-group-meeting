@@ -2,10 +2,13 @@ const express = require('express');
 const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
+// const cors = require('cors');
 const PORT = process.env.PORT || 3001;
 const path = require('path');
 
 let socketList = {};
+
+// app.use(cors());
 
 app.use(express.static(path.join(__dirname, 'public')));
 
